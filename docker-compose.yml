@@ -763,7 +763,9 @@ services:
 
   # OpenTelemetry Collector
   otel-collector:
-    image: ${COLLECTOR_CONTRIB_IMAGE}
+    build:
+      context: ./otel-collector
+      dockerfile: Dockerfile
     container_name: otel-collector
     deploy:
       resources:
