@@ -1,5 +1,5 @@
 server:
-  endpoint: ${OPAMP_SERVER_ENDPOINT}
+  endpoint: ws://host.docker.internal:4320/v1/opamp
   tls:
     insecure_skip_verify: true
     insecure: true
@@ -16,8 +16,8 @@ capabilities:
 agent:
   executable: /otelcol-contrib
   config_files:
-    - /otelcol-config.yaml
-    - /otelcol-config-extras.yml
+    - /app/otelcol-config.yml
+    - /app/otelcol-config-extras.yml
 
 
 storage:

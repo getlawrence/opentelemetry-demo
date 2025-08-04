@@ -6,10 +6,12 @@ FROM otel/opentelemetry-collector-contrib:0.131.1 AS otel
 # Final stage
 FROM alpine:latest
 
+WORKDIR /app
+
 # Copy from builder - use the correct source path
 COPY --from=supervisor /usr/local/bin/opampsupervisor ./opampsupervisor
 COPY supervisor_docker.yaml .
-COPY otelcol-config.yaml .
+COPY otelcol-config.yml .
 COPY otelcol-config-extras.yml .
 
 # Copy from OpenTelemetry
