@@ -463,6 +463,28 @@ services:
         condition: service_started
     logging: *logging
 
+  wishlist:
+    image: ${IMAGE_NAME}:${DEMO_VERSION}-wishlist
+    container_name: wishlist
+    build:
+      context: ./
+      dockerfile: ${WISHLIST_DOCKERFILE}
+      cache_from:
+        - ${IMAGE_NAME}:${IMAGE_VERSION}-wishlist
+    deploy:
+      resources:
+        limits:
+          memory: 20M
+    restart: unless-stopped
+    ports:
+      - "${WISHLIST_PORT}"
+    environment:
+      - WISHLIST_PORT
+    depends_on:
+      otel-collector:
+        condition: service_started
+    logging: *logging
+    
   # Product Catalog service
   product-catalog:
     image: ${IMAGE_NAME}:${DEMO_VERSION}-product-catalog
