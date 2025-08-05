@@ -1,0 +1,17 @@
+{
+  "name": "wishlist",
+  "description": "Wishlist Service",
+  "repository": "https://github.com/opentelemetry/opentelemetry-demo",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Motti Bechhofer",
+  "license": "ISC",
+  "dependencies": {
+    "@grpc/grpc-js": "1.12.6",
+    "@grpc/proto-loader": "0.8.0",
+    "grpc-js-health-check": "1.2.2",
+    "pino": "^9.7.0"
+  }
+}
