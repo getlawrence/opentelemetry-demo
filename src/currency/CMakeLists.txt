@@ -10,7 +10,7 @@ set(GENERATED_PROTOBUF_PATH "${CMAKE_BINARY_DIR}/generated/proto")
 
 add_subdirectory(genproto)
 
-include_directories("${GENERATED_PROTOBUF_PATH}" "${OPENTELEMETRY_CPP_INCLUDE_DIRS}")
+include_directories("${GENERATED_PROTOBUF_PATH}")
 
 add_executable(currency src/server.cpp src/datadog_client.cpp)
 add_dependencies(currency demo-proto)

@@ -2,38 +2,50 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use core::fmt;
-use opentelemetry::global;
-use opentelemetry_instrumentation_actix_web::ClientExt;
-use std::{collections::HashMap, env};
+use std::{collections::HashMap, env, time::Instant};
 
 use anyhow::{Context, Result};
-use opentelemetry::{trace::get_active_span, KeyValue};
 use tracing::info;
 
 use super::shipping_types::Quote;
+use crate::datadog::DataDogClient;
 
 pub async fn create_quote_from_count(count: u32) -> Result<Quote, tonic::Status> {
+    let start = Instant::now();
+    let datadog = DataDogClient::new();
+    
     let f = match request_quote(count).await {
         Ok(float) => float,
         Err(err) => {
             let msg = format!("{}", err);
+            // Track quote request errors
+            if let Err(e) = datadog.increment_counter("shipping.quote.error", vec![]).await {
+                eprintln!("Failed to send error metric: {}", e);
+            }
             return Err(tonic::Status::unknown(msg));
         }
     };
 
-    let meter = global::meter("otel_demo.shipping.quote");
-    let counter = meter.u64_counter("app.shipping.items_count").build();
-    counter.add(count as u64, &[]);
+    let quote = create_quote_from_float(f);
+    
+    // Track metrics with DataDog
+    let duration = start.elapsed();
+    let items_count_tag = format!("items_count:{}", count);
+    let tags = vec![items_count_tag.as_str()];
+    
+    if let Err(e) = datadog.send_metric("shipping.items_count", count as f64, vec![]).await {
+        eprintln!("Failed to send items count metric: {}", e);
+    }
+    
+    if let Err(e) = datadog.track_timing("shipping.quote.duration", duration, tags).await {
+        eprintln!("Failed to send timing metric: {}", e);
+    }
+    
+    if let Err(e) = datadog.send_metric("shipping.cost.total", f, vec![]).await {
+        eprintln!("Failed to send cost metric: {}", e);
+    }
 
-    Ok(get_active_span(|span| {
-        let q = create_quote_from_float(f);
-        span.add_event(
-            "Received Quote".to_string(),
-            vec![KeyValue::new("app.shipping.cost.total", format!("{}", q))],
-        );
-        span.set_attribute(KeyValue::new("app.shipping.cost.total", format!("{}", q)));
-        q
-    }))
+    Ok(quote)
 }
 
 async fn request_quote(count: u32) -> Result<f64, anyhow::Error> {
@@ -58,7 +70,6 @@ async fn request_quote(count: u32) -> Result<f64, anyhow::Error> {
 
     let mut response = client
         .post(quote_service_addr)
-        .trace_request()
         .send_json(&reqbody)
         .await
         .map_err(|err| anyhow::anyhow!("Failed to call quote service: {err}"))?;

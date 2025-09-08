@@ -5,7 +5,7 @@
 use reqwest::Client;
 use serde_json::json;
 use std::env;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use tokio::time::interval;
 
 pub struct DataDogClient {
@@ -52,7 +52,7 @@ impl DataDogClient {
         let payload = json!({
             "series": [{
                 "metric": name,
-                "points": [[chrono::Utc::now().timestamp(), value]],
+                "points": [[std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs() as i64, value]],
                 "tags": all_tags,
                 "type": "gauge"
             }]
