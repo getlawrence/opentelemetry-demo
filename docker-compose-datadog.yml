@@ -227,8 +227,6 @@ services:
     build:
       context: ./
       dockerfile: ${CURRENCY_DOCKERFILE}
-      args:
-        OPENTELEMETRY_CPP_VERSION: ${OPENTELEMETRY_CPP_VERSION}
       cache_from:
         - ${IMAGE_NAME}:${IMAGE_VERSION}-currency
     deploy:

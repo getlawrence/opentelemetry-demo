@@ -1,32 +1,15 @@
 // Copyright The OpenTelemetry Authors
 // SPDX-License-Identifier: Apache-2.0
+// DataDog Migration - Payment Service Logger
 
 const pino = require('pino')
 
-const transport = pino.transport({
-  target: 'pino-opentelemetry-transport',
-  options: {
-    logRecordProcessorOptions: [
-      {
-        recordProcessorType: 'batch',
-        exporterOptions: {
-          protocol: 'grpc',
-        }
-      },
-      {
-        recordProcessorType: 'simple',
-        exporterOptions: { protocol: 'console' }
-      }
-    ],
-    loggerName: 'payment-logger',
-    serviceVersion: '1.0.0'
-  }
-})
-
-const logger = pino(transport, {
+const logger = pino({
   mixin() {
     return {
-      'service.name': process.env['OTEL_SERVICE_NAME'],
+      'service.name': process.env['DD_SERVICE'] || 'payment',
+      'service.version': process.env['DD_VERSION'] || '1.0.0',
+      'env': process.env['DD_ENV'] || 'development'
     }
   },
   formatters: {

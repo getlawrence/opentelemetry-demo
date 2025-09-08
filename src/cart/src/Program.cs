@@ -10,11 +10,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Logging;
-using OpenTelemetry.Instrumentation.StackExchangeRedis;
-using OpenTelemetry.Logs;
-using OpenTelemetry.Metrics;
-using OpenTelemetry.Resources;
-using OpenTelemetry.Trace;
+using Datadog.Trace;
+using Datadog.Trace.Configuration;
 using OpenFeature;
 using OpenFeature.Contrib.Providers.Flagd;
 using OpenFeature.Hooks;
@@ -28,7 +25,6 @@ if (string.IsNullOrEmpty(valkeyAddress))
 }
 
 builder.Logging
-    .AddOpenTelemetry(options => options.AddOtlpExporter())
     .AddConsole();
 
 builder.Services.AddSingleton<ICartStore>(x =>
@@ -55,30 +51,19 @@ builder.Services.AddSingleton(x =>
 ));
 
 
-Action<ResourceBuilder> appResourceBuilder =
-    resource => resource
-        .AddService(builder.Environment.ApplicationName)
-        .AddContainerDetector()
-        .AddHostDetector();
+// Configure DataDog tracing
+var tracerSettings = TracerSettings.FromDefaultSources();
+tracerSettings.ServiceName = "cart";
+tracerSettings.Environment = Environment.GetEnvironmentVariable("DD_ENV") ?? "development";
+tracerSettings.ServiceVersion = Environment.GetEnvironmentVariable("DD_VERSION") ?? "latest";
 
-builder.Services.AddOpenTelemetry()
-    .ConfigureResource(appResourceBuilder)
-    .WithTracing(tracerBuilder => tracerBuilder
-        .AddSource("OpenTelemetry.Demo.Cart")
-        .AddRedisInstrumentation(
-            options => options.SetVerboseDatabaseStatements = true)
-        .AddAspNetCoreInstrumentation()
-        .AddGrpcClientInstrumentation()
-        .AddHttpClientInstrumentation()
-        .AddOtlpExporter())
-    .WithMetrics(meterBuilder => meterBuilder
-        .AddMeter("OpenTelemetry.Demo.Cart")
-        .AddMeter("OpenFeature")
-        .AddProcessInstrumentation()
-        .AddRuntimeInstrumentation()
-        .AddAspNetCoreInstrumentation()
-        .SetExemplarFilter(ExemplarFilterType.TraceBased)
-        .AddOtlpExporter());
+// Configure DataDog agent endpoint
+var agentHost = Environment.GetEnvironmentVariable("DD_AGENT_HOST") ?? "datadog-agent";
+var agentPort = Environment.GetEnvironmentVariable("DD_TRACE_AGENT_PORT") ?? "8126";
+tracerSettings.AgentUri = new Uri($"http://{agentHost}:{agentPort}");
+
+// Initialize DataDog tracer
+Tracer.Configure(tracerSettings);
 builder.Services.AddGrpc();
 builder.Services.AddGrpcHealthChecks()
     .AddCheck("Sample", () => HealthCheckResult.Healthy());
@@ -86,7 +71,6 @@ builder.Services.AddGrpcHealthChecks()
 var app = builder.Build();
 
 var ValkeyCartStore = (ValkeyCartStore)app.Services.GetRequiredService<ICartStore>();
-app.Services.GetRequiredService<StackExchangeRedisInstrumentation>().AddConnection(ValkeyCartStore.GetConnection());
 
 app.MapGrpcService<CartService>();
 app.MapGrpcHealthChecksService();

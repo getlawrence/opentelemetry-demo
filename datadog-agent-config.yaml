@@ -1,0 +1,56 @@
+# DataDog Agent Configuration for OpenTelemetry Demo Migration
+# This replaces the OpenTelemetry Collector configuration
+
+api_key: ${DD_API_KEY}
+site: ${DD_SITE:-datadoghq.com}
+
+# Enable APM
+apm_config:
+  enabled: true
+  apm_non_local_traffic: true
+  env: ${DD_ENV:-development}
+  service: ${DD_SERVICE:-opentelemetry-demo}
+
+# Enable logs collection
+logs_enabled: true
+logs_config:
+  container_collect_all: true
+  container_include: ["*"]
+  container_exclude: ["name:datadog-agent"]
+
+# Enable metrics collection
+enable_metadata_collection: true
+
+# Process monitoring
+process_config:
+  enabled: true
+
+# Network monitoring
+network_config:
+  enabled: true
+
+# Container monitoring
+container_config:
+  enabled: true
+
+# Custom tags
+tags:
+  - env:${DD_ENV:-development}
+  - service:opentelemetry-demo
+  - version:${DD_VERSION:-latest}
+
+# Log level
+log_level: info
+
+# DogStatsD configuration
+dogstatsd_config:
+  enabled: true
+  non_local_traffic: true
+  port: 8125
+
+# Trace agent configuration
+trace:
+  enabled: true
+  apm_non_local_traffic: true
+  env: ${DD_ENV:-development}
+  service: ${DD_SERVICE:-opentelemetry-demo}

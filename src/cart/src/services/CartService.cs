@@ -40,7 +40,12 @@ public class CartService : Oteldemo.CartService.CartServiceBase
         }
         catch (RpcException ex)
         {
-            activity?.AddException(ex);
+            activity?.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
+            {
+                { "exception.type", ex.GetType().FullName },
+                { "exception.message", ex.Message },
+                { "exception.stacktrace", ex.StackTrace ?? string.Empty }
+            }));
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }
@@ -66,7 +71,12 @@ public class CartService : Oteldemo.CartService.CartServiceBase
         }
         catch (RpcException ex)
         {
-            activity?.AddException(ex);
+            activity?.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
+            {
+                { "exception.type", ex.GetType().FullName },
+                { "exception.message", ex.Message },
+                { "exception.stacktrace", ex.StackTrace ?? string.Empty }
+            }));
             activity?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }
@@ -91,7 +101,12 @@ public class CartService : Oteldemo.CartService.CartServiceBase
         }
         catch (RpcException ex)
         {
-            Activity.Current?.AddException(ex);
+            Activity.Current?.AddEvent(new ActivityEvent("exception", tags: new ActivityTagsCollection
+            {
+                { "exception.type", ex.GetType().FullName },
+                { "exception.message", ex.Message },
+                { "exception.stacktrace", ex.StackTrace ?? string.Empty }
+            }));
             Activity.Current?.SetStatus(ActivityStatusCode.Error, ex.Message);
             throw;
         }

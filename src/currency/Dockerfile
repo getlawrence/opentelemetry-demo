@@ -23,7 +23,7 @@ FROM base AS builder
 
 RUN apk add git cmake make g++ linux-headers
 
-ARG OPENTELEMETRY_CPP_VERSION
+ARG OPENTELEMETRY_CPP_VERSION="1.17.0"
 
 RUN git clone --depth 1 --branch v${OPENTELEMETRY_CPP_VERSION} https://github.com/open-telemetry/opentelemetry-cpp \
     && cd opentelemetry-cpp/ \
